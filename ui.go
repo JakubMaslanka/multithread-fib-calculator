@@ -75,6 +75,7 @@ func setupUI(app *tview.Application, pages *tview.Pages, tm *ThreadManager) {
 		}).
 		SetTextColor(tcell.ColorGreen)
 	logger.SetBorder(true).SetTitle(" Logger: ").SetTitleAlign(tview.AlignLeft)
+	logger.ScrollToEnd()
 	mainFlex.AddItem(logger, 0, 2, false)
 
 	// Add main page to the application
