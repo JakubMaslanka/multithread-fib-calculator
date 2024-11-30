@@ -23,7 +23,7 @@ func setupUI(app *tview.Application, pages *tview.Pages, tm *ThreadManager) {
 
 	// Header displaying the app title
 	header := tview.NewTextView().
-		SetText("Fibonacci Multi-threaded Calculator in Go Lang").
+		SetText("Multi-threaded Fibonacci Calculator in Go Lang").
 		SetTextAlign(tview.AlignCenter).
 		SetDynamicColors(true).
 		SetTextColor(tcell.ColorWhite)
