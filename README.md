@@ -1,7 +1,9 @@
-# Multi-threaded Fibonacci Calculator in Go Lang
+# Multi-Thread Fibonacci Calculator in Go Lang
 
 ### Table of Contents
 
+- [Multi-Thread Fibonacci Calculator in Go Lang](#multi-thread-fibonacci-calculator-in-go-lang)
+    - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Features](#features)
   - [Motivation](#motivation)
@@ -19,7 +21,7 @@
 
 ## Overview
 
-The **Multi-threaded Fibonacci Calculator** is a Go application that calculates Fibonacci numbers using concurrent goroutines. It provides a text-based user interface (TUI) built with the `tview` library, allowing users to start multiple Fibonacci calculations simultaneously and monitor their progress in real-time.
+The **Multi-Thread Fibonacci Calculator** is a Go application that calculates Fibonacci numbers using concurrent goroutines. It provides a text-based user interface (TUI) built with the `tview` library, allowing users to start multiple Fibonacci calculations simultaneously and monitor their progress in real-time.
 
 ## Features
 
