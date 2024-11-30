@@ -63,10 +63,27 @@ func (tm *ThreadManager) StartFibonacci(id string, n int, operationFunc func(ctx
 
     tm.logChan <- "Started Fibonacci operation with ID " + id
 
-    go operationFunc(ctx, op, n, tm)
-}
+    // Launches a goroutines to manage the Fibonacci operation execution and monitor its status
+    // The first goroutine runs the operation function and signals completion via the `done` channel
+    // The outer goroutine monitors for either operation completion or timeout/cancellation via a `select` statement
+    go func() {
+		done := make(chan bool)
 
-// CancelOperation anuluje operację o podanym ID.
+		go func() {
+			operationFunc(ctx, op, n, tm)
+			done <- true
+		}()
+
+		select {
+            case <-done: // Operation completed successfully
+            case <-ctx.Done(): // Handle timeout or cancellation
+                if ctx.Err() == context.DeadlineExceeded {
+                    tm.logChan <- fmt.Sprintf("Timeout: Fibonacci operation for n=%d (ID: %s) exceeded 10 seconds.", n, id)
+                }
+                tm.CancelOperation(id)
+		}
+	}()
+}
 func (tm *ThreadManager) CancelOperation(id string) {
     tm.mutex.Lock()
     if op, exists := tm.operations[id]; exists && op.Status == StatusRunning {
