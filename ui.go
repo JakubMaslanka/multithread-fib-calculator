@@ -116,8 +116,8 @@ func setupUI(app *tview.Application, pages *tview.Pages, tm *ThreadManager) {
 	pages.AddPage(PageForm, form, true, false)
 
 	go func() {
-        ticker := time.NewTicker(250 * time.Millisecond)
-        defer ticker.Stop()
+		ticker := time.NewTicker(250 * time.Millisecond)
+		defer ticker.Stop()
 
 		for range ticker.C {
 			ops := tm.GetOperations()
@@ -150,14 +150,14 @@ func setupUI(app *tview.Application, pages *tview.Pages, tm *ThreadManager) {
 				}
 			})
 		}
-    }()
+	}()
 
 	// Goroutine responsible for listening on the log channel (tm.logChan) for new log messages sent by other parts of the application
-    // 
-    // The channel tm.logChan acts as a thread-safe communication mechanism between goroutines, ensuring proper synchronization
-    // and avoiding race conditions. When a new message is sent to the channel, this goroutine retrieves it and updates the
-    // logger view in the UI. The `app.QueueUpdateDraw` function schedules the UI update, queuing it for safe execution in the 
-    // main thread to prevent rendering issues.
+	//
+	// The channel tm.logChan acts as a thread-safe communication mechanism between goroutines, ensuring proper synchronization
+	// and avoiding race conditions. When a new message is sent to the channel, this goroutine retrieves it and updates the
+	// logger view in the UI. The `app.QueueUpdateDraw` function schedules the UI update, queuing it for safe execution in the
+	// main thread to prevent rendering issues.
 	go func() {
 		for logMsg := range tm.logChan {
 			app.QueueUpdateDraw(func() {
