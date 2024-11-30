@@ -1,42 +1,51 @@
-// manager.go
 package main
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"sync"
 	"time"
 )
 
-// OperationStatus reprezentuje status operacji.
+// OperationStatus represents the state of an operation
 type OperationStatus string
 
 const (
-    StatusRunning   OperationStatus = "Running"
-    StatusStopped   OperationStatus = "Stopped"
-    StatusCompleted OperationStatus = "Completed"
+    StatusRunning   OperationStatus = "Running"     // Indicates the operation is currently in progress
+    StatusStopped   OperationStatus = "Stopped"     // Indicates the operation was canceled
+    StatusCompleted OperationStatus = "Completed"   // Indicates the operation has finished
 )
 
-// Operation przechowuje informacje o pojedynczej operacji.
+
+// Operation struct holds all metadata and state information about an individual operation
 type Operation struct {
-    ID        string
-    Name      string
-    N         int
-    Progress  int
-    Status    OperationStatus
-    Result    string
-    CreatedAt time.Time
-    Cancel    context.CancelFunc
+    ID        string                // Unique identifier for the operation
+    Name      string                // Human-readable name of the operation
+    N         int                   // Target value or parameter for the operation
+    Progress  int                   // An integer between 0 and 100 representing the operation's progress percentage
+    Status    OperationStatus       // The current status of the operation (Running, Stopped, or Completed)
+    Result    string                // Result of the operation (if completed)
+    CreatedAt time.Time             // Timestamp when the operation was created
+    Cancel    context.CancelFunc    // Context channel that listens for the cancel signal
 }
 
-// ThreadManager zarządza operacjami (goroutines).
+
+
+// ThreadManager manages the lifecycle and state of multiple concurrent operations
 type ThreadManager struct {
-    operations map[string]*Operation
-    mutex      sync.Mutex
-    logChan    chan string
+    operations map[string]*Operation    // A hashmap of operation IDs to Operation pointers for tracking active and completed operations
+    mutex      sync.Mutex               // A sync.Mutex to ensure thread-safe access to the operations map address
+    logChan    chan string              // A channel for sending log messages about operations
 }
 
-// NewThreadManager tworzy nowy ThreadManager.
+// NewThreadManager creates and initializes a new ThreadManager instance
+//
+// Parameters:
+// - logChan: A channel for transmitting log messages
+//
+// Returns:
+// - A pointer to the newly created ThreadManager instance
 func NewThreadManager(logChan chan string) *ThreadManager {
     return &ThreadManager{
         operations: make(map[string]*Operation),
@@ -44,10 +53,18 @@ func NewThreadManager(logChan chan string) *ThreadManager {
     }
 }
 
-// StartFibonacci uruchamia operację Fibonacciego w nowej goroutine.
+// StartFibonacci starts a new Fibonacci operation as a goroutine
+//
+// Parameters:
+// - id: A unique identifier for the operation
+// - n: The n-th Fibonacci number to calculate
+// - operationFunc: A function that performs the operation logic, supporting cancellation via context (see fib.go file)
+//
+// This method initializes the operation, stores it in the operations map, and starts the goroutine
 func (tm *ThreadManager) StartFibonacci(id string, n int, operationFunc func(ctx context.Context, op *Operation, n int, tm *ThreadManager)) {
     tm.mutex.Lock()
-    ctx, cancel := context.WithCancel(context.Background())
+    // Creates a new context with a 10-second timeout and a cancel function
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     op := &Operation{
         ID:        id,
         Name:      "Fibonacci",
@@ -84,6 +101,13 @@ func (tm *ThreadManager) StartFibonacci(id string, n int, operationFunc func(ctx
 		}
 	}()
 }
+
+// CancelOperation cancels an ongoing operation by ID if it is currently running
+//
+// Parameters:
+// - id: The unique identifier of the operation to cancel
+//
+// This method uses the operation's Cancel function to signal termination and updates its status
 func (tm *ThreadManager) CancelOperation(id string) {
     tm.mutex.Lock()
     if op, exists := tm.operations[id]; exists && op.Status == StatusRunning {
@@ -94,7 +118,9 @@ func (tm *ThreadManager) CancelOperation(id string) {
     tm.mutex.Unlock()
 }
 
-// CancelAllOperations anuluje wszystkie bieżące operacje.
+// CancelAllOperations cancels all currently running operations
+//
+// This method iterates through all stored operations and cancels those with a "Running" status.
 func (tm *ThreadManager) CancelAllOperations() {
     tm.mutex.Lock()
     defer tm.mutex.Unlock()
@@ -107,7 +133,10 @@ func (tm *ThreadManager) CancelAllOperations() {
     }
 }
 
-// GetOperations zwraca listę wszystkich operacji posortowaną według CreatedAt.
+// GetOperations retrieves a list of all operations, sorted by their creation time
+//
+// Returns:
+// - A slice of Operation pointers sorted in ascending order of their creation timestamps
 func (tm *ThreadManager) GetOperations() []*Operation {
     tm.mutex.Lock()
     defer tm.mutex.Unlock()
@@ -115,14 +144,17 @@ func (tm *ThreadManager) GetOperations() []*Operation {
     for _, op := range tm.operations {
         ops = append(ops, op)
     }
-    // Sortowanie operacji według CreatedAt
+
     sort.Slice(ops, func(i, j int) bool {
         return ops[i].CreatedAt.Before(ops[j].CreatedAt)
     })
     return ops
 }
 
-// GetRunningOperations zwraca listę wszystkich bieżących operacji.
+// GetRunningOperations retrieves a list of all currently running operations
+//
+// Returns:
+// - A slice of Operation pointers with a status of "Running"
 func (tm *ThreadManager) GetRunningOperations() []*Operation {
     tm.mutex.Lock()
     defer tm.mutex.Unlock()
@@ -135,7 +167,12 @@ func (tm *ThreadManager) GetRunningOperations() []*Operation {
     return running
 }
 
-// UpdateOperation aktualizuje informacje o operacji.
+// UpdateOperation updates the state of an existing operation
+//
+// Parameters:
+// - op: A pointer to the Operation to update
+//
+// This method replaces the operation in the map with the updated instance
 func (tm *ThreadManager) UpdateOperation(op *Operation) {
     tm.mutex.Lock()
     tm.operations[op.ID] = op

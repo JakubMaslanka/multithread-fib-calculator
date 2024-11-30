@@ -1,39 +1,42 @@
-// main.go
 package main
 
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/rivo/tview"
 )
 
 func main() {
-    // Inicjalizacja loggera
+    // The logger is initialized with a buffered channel to handle log messages asynchronously
     logChan := make(chan string, 100)
     defer close(logChan)
-
-    // Inicjalizacja ThreadManager
+    
+    // The ThreadManager is created to manage concurrent operations within the application
     tm := NewThreadManager(logChan)
-
-    // Inicjalizacja UI
+    
+    // The user interface is built using the tview library, with an application and pages setup
     app := tview.NewApplication()
     pages := tview.NewPages()
-
+    
+    // The setupUI function is called to configure the UI components and link them with the ThreadManager
     setupUI(app, pages, tm)
-
-    // Uruchomienie aplikacji
+    
+    // Finally, the application is started with mouse support enabled. If the application fails to run,
+    // it will panic and display the error message
     if err := app.SetRoot(pages, true).EnableMouse(true).Run(); err != nil {
         panic(err)
     }
 }
 
-// generateID tworzy unikalne ID na podstawie losowych bajtów i kodowania heksadecymalnego.
+// generateID creates a unique ID based on random bytes and hexadecimal encoding
 func generateID() string {
-    bytes := make([]byte, 4) // 4 bajty = 8 znaków hex
+    bytes := make([]byte, 4)
     _, err := rand.Read(bytes)
     if err != nil {
-        panic(err) // Możesz obsłużyć błąd w inny sposób
+        fmt.Println("Failed to generate random ID:", err)
+        panic(err)
     }
     return hex.EncodeToString(bytes)
 }
