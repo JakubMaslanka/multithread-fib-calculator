@@ -2,8 +2,6 @@
 
 ### Table of Contents
 
-- [Multi-Thread Fibonacci Calculator in Go Lang](#multi-thread-fibonacci-calculator-in-go-lang)
-    - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Features](#features)
   - [Motivation](#motivation)
